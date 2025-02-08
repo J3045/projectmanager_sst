@@ -6,20 +6,40 @@ import { toast } from "react-hot-toast";
 interface AddProjectFormProps {
   onClose: () => void;
   refetch: () => void;
-  setIsAddingProject: React.Dispatch<React.SetStateAction<boolean>>; // Add this
+  setIsAddingProject: React.Dispatch<React.SetStateAction<boolean>>;
+  projectData?: {
+    id: number;
+    name: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+  };
+  onUpdate?: (updatedData: {
+    id: number;
+    name: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+  }) => void;
 }
 
-const AddProjectForm: React.FC<AddProjectFormProps> = ({ onClose, refetch, setIsAddingProject }) => {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+const AddProjectForm: React.FC<AddProjectFormProps> = ({
+  onClose,
+  refetch,
+  setIsAddingProject,
+  projectData,
+  onUpdate,
+}) => {
+  const [name, setName] = useState(projectData?.name || "");
+  const [description, setDescription] = useState(projectData?.description || "");
+  const [startDate, setStartDate] = useState(projectData?.startDate || "");
+  const [endDate, setEndDate] = useState(projectData?.endDate || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createProject = api.project.createProject.useMutation({
     onMutate: () => {
       setIsSubmitting(true);
-      setIsAddingProject(true); // Ensure state is updated
+      setIsAddingProject(true);
     },
     onSuccess: () => {
       toast.success("🎉 Project created successfully!", {
@@ -33,7 +53,7 @@ const AddProjectForm: React.FC<AddProjectFormProps> = ({ onClose, refetch, setIs
       });
       refetch();
       onClose();
-      setIsAddingProject(false); // Reset state
+      setIsAddingProject(false);
     },
     onError: (error) => {
       toast.error("❌ Failed to create project!", {
@@ -46,20 +66,55 @@ const AddProjectForm: React.FC<AddProjectFormProps> = ({ onClose, refetch, setIs
         },
       });
       console.error("Error creating project", error);
-      setIsAddingProject(false); // Reset state on error
+      setIsAddingProject(false);
+    },
+    onSettled: () => setIsSubmitting(false),
+  });
+
+  const updateProject = api.project.updateProject.useMutation({
+    onSuccess: () => {
+      toast.success("🎉 Project updated successfully!", {
+        style: {
+          background: "#4CAF50",
+          color: "#fff",
+          fontWeight: "bold",
+          borderRadius: "8px",
+          padding: "12px",
+        },
+      });
+      refetch();
+      onClose();
+      setIsAddingProject(false);
+    },
+    onError: (error) => {
+      toast.error("❌ Failed to update project!", {
+        style: {
+          background: "#D32F2F",
+          color: "#fff",
+          fontWeight: "bold",
+          borderRadius: "8px",
+          padding: "12px",
+        },
+      });
+      console.error("Error updating project", error);
+      setIsAddingProject(false);
     },
     onSettled: () => setIsSubmitting(false),
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!name.trim()) return toast.error("Project name is required.");
     if (!description.trim()) return toast.error("Project description is required.");
     if (!startDate || !endDate) return toast.error("Please select both start and end dates.");
     if (new Date(startDate) > new Date(endDate)) return toast.error("End date must be after start date.");
 
-    createProject.mutate({ name, description, startDate, endDate });
+    if (projectData && onUpdate) {
+      onUpdate({ id: projectData.id, name, description, startDate, endDate });
+    } else {
+      createProject.mutate({ name, description, startDate, endDate });
+    }
   };
 
   return (
@@ -72,7 +127,9 @@ const AddProjectForm: React.FC<AddProjectFormProps> = ({ onClose, refetch, setIs
         className="bg-white rounded-lg shadow-2xl p-6 w-[90%] max-w-lg"
       >
         <div className="flex justify-between items-center border-b pb-4 mb-4">
-          <h2 className="text-2xl font-bold text-gray-800">Create New Project</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {projectData ? "Edit Project" : "Create New Project"}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-600 hover:text-gray-900 transition transform hover:scale-110 text-3xl leading-none"
@@ -140,7 +197,13 @@ const AddProjectForm: React.FC<AddProjectFormProps> = ({ onClose, refetch, setIs
                 : "bg-indigo-600 hover:bg-indigo-500 hover:scale-105"
             }`}
           >
-            {isSubmitting ? "Creating..." : "Create Project"}
+            {isSubmitting
+              ? projectData
+                ? "Updating..."
+                : "Creating..."
+              : projectData
+              ? "Update Project"
+              : "Create Project"}
           </button>
         </form>
       </motion.div>

@@ -1,30 +1,45 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { FaTimes } from "react-icons/fa"; // Import close icon
-import { api } from "~/utils/api"; // Corrected import for API from utils
-import { TaskStatus, TaskPriority } from "@prisma/client"; // Import enums
-import Select from "react-select"; // Import react-select
-import { MultiValue } from "react-select"
+import { FaTimes } from "react-icons/fa";
+import { api } from "~/utils/api";
+import { TaskStatus, TaskPriority } from "@prisma/client";
+import Select from "react-select";
+import { MultiValue } from "react-select";
 import { toast } from "react-hot-toast";
 
 interface AddTaskModalProps {
   projectId: number;
   onClose: () => void;
-  refetchTasks: () => void; // Add refetchTasks prop to update the dashboard
+  refetchTasks: () => void;
+  taskData?: Task | null; // Add taskData prop for editing
 }
 
-const AddTaskModal = ({ projectId, onClose, refetchTasks }: AddTaskModalProps) => {
+type Task = {
+  id?: number;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  tags?: string;
+  startDate?: Date | null;
+  dueDate?: Date | null;
+  points?: number;
+  assignedUsers: { id: string; name: string | null }[];
+};
+
+const AddTaskModal = ({ projectId, onClose, refetchTasks, taskData }: AddTaskModalProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [assignedUserIds, setAssignedUserIds] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState<Date | null>(null);
-  const [status, setStatus] = useState<TaskStatus | null>(null); // Use enum type
-  const [priority, setPriority] = useState<TaskPriority | null>(null); // Use enum type
+  const [status, setStatus] = useState<TaskStatus | null>(null);
+  const [priority, setPriority] = useState<TaskPriority | null>(null);
   const [tags, setTags] = useState("");
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [points, setPoints] = useState<number | undefined>(undefined);
   const [users, setUsers] = useState<{ id: string; name: string | null }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
 
   // Fetch users from the database
   const { data: userData } = api.user.getAllUsers.useQuery();
@@ -35,23 +50,44 @@ const AddTaskModal = ({ projectId, onClose, refetchTasks }: AddTaskModalProps) =
     }
   }, [userData]);
 
+  // Pre-fill form fields if taskData is provided (editing mode)
+  useEffect(() => {
+    if (taskData) {
+      setTitle(taskData.title);
+      setDescription(taskData.description ?? "");
+      setAssignedUserIds(taskData.assignedUsers.map((user) => user.id));
+      setDueDate(taskData.dueDate ?? null);
+      setStatus(taskData.status);
+      setPriority(taskData.priority);
+      setTags(taskData.tags ?? "");
+      setStartDate(taskData.startDate ?? null);
+      setPoints(taskData.points ?? undefined);
+    } else {
+      // Reset form fields if taskData is null (adding mode)
+      setTitle("");
+      setDescription("");
+      setAssignedUserIds([]);
+      setDueDate(null);
+      setStatus(null);
+      setPriority(null);
+      setTags("");
+      setStartDate(null);
+      setPoints(undefined);
+    }
+  }, [taskData]);
+
   // Prepare user options for react-select
   const userOptions = users.map((user) => ({
     value: user.id,
-    label: user.name ?? "Unnamed User", // Fallback for null names
+    label: user.name ?? "Unnamed User",
   }));
 
-  interface UserOption {
-    value: string;
-    label: string;
-  }
-  
- 
-const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: string }>) => {
-  setAssignedUserIds(selectedOptions.map((option) => option.value));
-};
-  // Mutation for creating task
-  const { mutate } = api.task.createTask.useMutation({
+  const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: string }>) => {
+    setAssignedUserIds(selectedOptions.map((option) => option.value));
+  };
+
+  // Mutation for creating or updating task
+  const createTaskMutation = api.task.createTask.useMutation({
     onSuccess: () => {
       onClose();
       refetchTasks();
@@ -59,40 +95,19 @@ const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: st
     onError: (err) => {
       console.error("Error creating task:", err);
       toast.error(`Error creating task: ${err.message}`);
-    }
+    },
   });
 
-  // Status dot color based on the status value
-  const statusDot = (status: TaskStatus) => {
-    switch (status) {
-      case TaskStatus.TO_DO:
-        return "bg-gray-500"; // Gray dot for "To Do"
-      case TaskStatus.IN_PROGRESS:
-        return "bg-blue-500"; // Blue dot for "In Progress"
-      case TaskStatus.IN_REVIEW:
-        return "bg-orange-500"; // Orange dot for "Under Review"
-      case TaskStatus.COMPLETED:
-        return "bg-green-500"; // Green dot for "Completed"
-      default:
-        return "bg-gray-400"; // Default gray dot if no status
-    }
-  };
-
-  // Priority dot color based on priority level
-  const priorityDot = (priority: TaskPriority) => {
-    switch (priority) {
-      case TaskPriority.LOW:
-        return "bg-green-500"; // Green dot for Low priority
-      case TaskPriority.MEDIUM:
-        return "bg-yellow-500"; // Yellow dot for Medium priority
-      case TaskPriority.HIGH:
-        return "bg-blue-500"; // Blue dot for High priority
-      case TaskPriority.URGENT:
-        return "bg-red-500"; // Red dot for Urgent priority
-      default:
-        return "bg-gray-400"; // Default gray dot if no priority
-    }
-  };
+  const updateTaskMutation = api.task.updateTask.useMutation({
+    onSuccess: () => {
+      onClose();
+      refetchTasks();
+    },
+    onError: (err) => {
+      console.error("Error updating task:", err);
+      toast.error(`Error updating task: ${err.message}`);
+    },
+  });
 
   const handleSubmit = () => {
     try {
@@ -105,7 +120,8 @@ const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: st
         return;
       }
       setIsSubmitting(true);
-      mutate({
+
+      const taskDataInput = {
         title,
         description,
         projectId,
@@ -116,14 +132,24 @@ const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: st
         tags,
         startDate,
         points,
-      });
+      };
+
+      if (taskData?.id) {
+        // Update existing task
+        updateTaskMutation.mutate({ id: taskData.id, ...taskDataInput });
+      } else {
+        // Create new task
+        createTaskMutation.mutate(taskDataInput);
+      }
     } catch (error) {
-      console.error("Error creating task:", error);
+      console.error("Error submitting task:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-800 bg-opacity-70 flex justify-center items-center ">
+    <div className="fixed inset-0 z-50 bg-gray-800 bg-opacity-70 flex justify-center items-center">
       <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden">
         {/* Close Icon */}
         <div className="flex justify-end">
@@ -132,7 +158,9 @@ const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: st
           </button>
         </div>
 
-        <h2 className="text-3xl font-semibold mb-6 text-gray-800 text-center">Add New Task</h2>
+        <h2 className="text-3xl font-semibold mb-6 text-gray-800 text-center">
+          {taskData ? "Edit Task" : "Add New Task"}
+        </h2>
 
         {/* Horizontal Form Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -164,25 +192,17 @@ const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: st
           {/* Status (Dropdown) */}
           <div className="mb-4">
             <label className="block text-gray-700 font-medium">Status</label>
-            <div className="flex items-center space-x-2">
-              <select
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                value={status ?? ""}
-                onChange={(e) => setStatus(e.target.value as TaskStatus | null)}
-              >
-                <option value="">Select Status</option>
-                <option value={TaskStatus.TO_DO}>To Do</option>
-                <option value={TaskStatus.IN_PROGRESS}>In Progress</option>
-                <option value={TaskStatus.IN_REVIEW}>Under Review</option>
-                <option value={TaskStatus.COMPLETED}>Completed</option>
-              </select>
-              {status && (
-                <div
-                  className={`w-4 h-4 rounded-full ${statusDot(status)}`}
-                  title={status}
-                />
-              )}
-            </div>
+            <select
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              value={status ?? ""}
+              onChange={(e) => setStatus(e.target.value as TaskStatus | null)}
+            >
+              <option value="">Select Status</option>
+              <option value={TaskStatus.TO_DO}>To Do</option>
+              <option value={TaskStatus.IN_PROGRESS}>In Progress</option>
+              <option value={TaskStatus.IN_REVIEW}>Under Review</option>
+              <option value={TaskStatus.COMPLETED}>Completed</option>
+            </select>
           </div>
 
           {/* Due Date */}
@@ -199,25 +219,17 @@ const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: st
           {/* Priority (Dropdown) */}
           <div className="mb-4">
             <label className="block text-gray-700 font-medium">Priority</label>
-            <div className="flex items-center space-x-2">
-              <select
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                value={priority ?? ""}
-                onChange={(e) => setPriority(e.target.value as TaskPriority | null)}
-              >
-                <option value="">Select Priority</option>
-                <option value={TaskPriority.LOW}>Low</option>
-                <option value={TaskPriority.MEDIUM}>Medium</option>
-                <option value={TaskPriority.HIGH}>High</option>
-                <option value={TaskPriority.URGENT}>Urgent</option>
-              </select>
-              {priority && (
-                <div
-                  className={`w-4 h-4 rounded-full ${priorityDot(priority)}`}
-                  title={priority}
-                />
-              )}
-            </div>
+            <select
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              value={priority ?? ""}
+              onChange={(e) => setPriority(e.target.value as TaskPriority | null)}
+            >
+              <option value="">Select Priority</option>
+              <option value={TaskPriority.LOW}>Low</option>
+              <option value={TaskPriority.MEDIUM}>Medium</option>
+              <option value={TaskPriority.HIGH}>High</option>
+              <option value={TaskPriority.URGENT}>Urgent</option>
+            </select>
           </div>
 
           {/* Points (Dropdown) */}
@@ -283,8 +295,9 @@ const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: st
           <button
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             onClick={handleSubmit}
+            disabled={isSubmitting}
           >
-            Add Task
+            {isSubmitting ? "Submitting..." : taskData ? "Update Task" : "Add Task"}
           </button>
         </div>
       </div>

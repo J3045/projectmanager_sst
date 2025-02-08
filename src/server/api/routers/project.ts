@@ -41,6 +41,29 @@ export const projectRouter = createTRPCRouter({
       });
     }),
 
+  // Update an existing project
+  updateProject: publicProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        startDate: z.string().optional(), // Accepts string, converts to Date
+        endDate: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      return await db.project.update({
+        where: { id: input.id },
+        data: {
+          name: input.name,
+          description: input.description,
+          startDate: input.startDate ? new Date(input.startDate) : undefined,
+          endDate: input.endDate ? new Date(input.endDate) : undefined,
+        },
+      });
+    }),
+
   // Assign a team to a project
   assignTeamToProject: publicProcedure
     .input(z.object({ projectId: z.number(), teamId: z.number() }))

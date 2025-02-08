@@ -51,7 +51,7 @@ const Navbar = () => {
 
       <div className="flex items-center gap-4">
         {status === "authenticated" && session?.user && (
-          <div className="relative flex items-center gap-2">
+          <div className="relative flex items-center gap-4">
             <span className="text-gray-200 font-medium">{session.user.name}</span>
             {session.user.image ? (
               <Image

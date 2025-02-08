@@ -9,8 +9,7 @@ import AddProjectForm from "~/components/AddProjectForm";
 import AddTaskModal from "~/components/AddTaskModal";
 import { api } from "~/utils/api";
 import { type Task, TaskStatus } from "@prisma/client";
-
-
+import { FaTrash, FaEdit, FaPlus, FaCalendarAlt, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 const Dashboard = () => {
   const { data: session } = useSession();
@@ -25,6 +24,15 @@ const Dashboard = () => {
   const [loadingProjectId, setLoadingProjectId] = useState<number | null>(null);
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [editProjectData, setEditProjectData] = useState<{
+    id: number;
+    name: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+  } | null>(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<number, boolean>>({});
 
   // Fetch projects using tRPC
   const { data: projects, isError, refetch, isLoading } = api.project.getAllProjects.useQuery();
@@ -37,6 +45,15 @@ const Dashboard = () => {
       refetch();
     },
     onSettled: () => setLoadingProjectId(null),
+  });
+
+  // Update project mutation
+  const updateProject = api.project.updateProject.useMutation({
+    onSuccess: () => {
+      refetch();
+      setIsEditingProject(false);
+      setEditProjectData(null);
+    },
   });
 
   // Determine project status based on tasks
@@ -55,6 +72,37 @@ const Dashboard = () => {
     if (deleteConfirmation) {
       deleteProject.mutate({ id: deleteConfirmation.projectId });
     }
+  };
+
+  // Handle project edit
+  const handleEditProject = (project: {
+    id: number;
+    name: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+  }) => {
+    setEditProjectData(project);
+    setIsEditingProject(true);
+  };
+
+  // Handle project update
+  const handleUpdateProject = (updatedData: {
+    id: number;
+    name: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+  }) => {
+    updateProject.mutate(updatedData);
+  };
+
+  // Toggle description expansion
+  const toggleDescription = (projectId: number) => {
+    setExpandedDescriptions((prev) => ({
+      ...prev,
+      [projectId]: !prev[projectId],
+    }));
   };
 
   if (isError) {
@@ -107,31 +155,72 @@ const Dashboard = () => {
           />
         )}
 
+        {/* Edit Project Modal */}
+        {isEditingProject && editProjectData && (
+          <AddProjectForm
+            onClose={() => {
+              setIsEditingProject(false);
+              setEditProjectData(null);
+            }}
+            refetch={refetch}
+            setIsAddingProject={setIsAddingProject}
+            projectData={editProjectData}
+            onUpdate={handleUpdateProject}
+          />
+        )}
+
         {/* Project Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects?.map((project, index) => (
             <motion.div
               key={project.id}
-              className="bg-gray-100 shadow-lg rounded-lg p-6 hover:shadow-2xl transition duration-300 border-l-4 border-indigo-500 flex flex-col justify-between h-[250px] cursor-pointer"
+              className="bg-white shadow-lg rounded-xl p-6 hover:shadow-2xl transition duration-300 border border-gray-100 flex flex-col justify-between"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
-              onClick={() => router.push(`/projects/${project.id}`)}
             >
-              {/* Project Title */}
-              <h3 className="text-2xl font-semibold text-gray-800">{project.name}</h3>
+              {/* Project Title and Description */}
+              <div onClick={() => router.push(`/projects/${project.id}`)} className="cursor-pointer">
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">{project.name}</h3>
+                <div className="text-gray-600 text-sm">
+                  <p className={expandedDescriptions[project.id] ? "" : "line-clamp-2"}>
+                    {project.description || "No description available"}
+                  </p>
+                  {project.description && project.description.length > 100 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDescription(project.id);
+                      }}
+                      className="text-indigo-600 hover:text-indigo-500 mt-1 flex items-center text-sm"
+                    >
+                      {expandedDescriptions[project.id] ? (
+                        <>
+                          <FaChevronUp className="mr-1" /> Show Less
+                        </>
+                      ) : (
+                        <>
+                          <FaChevronDown className="mr-1" /> Show More
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
 
-              {/* Project Description */}
-              <p className="mt-2 text-gray-600 text-sm line-clamp-2">
-                {project.description && project.description.length > 100
-                  ? `${project.description.substring(0, 100)}...`
-                  : project.description ?? "No description available"}
-              </p>
+              {/* Project Dates */}
+              <div className="mt-4 flex items-center text-gray-700 text-sm">
+                <FaCalendarAlt className="mr-2 text-gray-500" />
+                <span>
+                  {project.startDate?.toISOString().split("T")[0]} -{" "}
+                  {project.endDate?.toISOString().split("T")[0]}
+                </span>
+              </div>
 
               {/* Task & Status */}
               <div className="mt-4 flex justify-between items-center">
-                <div className="text-gray-700">
-                  <span className="font-bold">Tasks:</span> {project.tasks.length}
+                <div className="text-gray-700 text-sm">
+                  <span className="font-semibold">Tasks:</span> {project.tasks.length}
                 </div>
                 <p
                   className={`text-sm font-semibold ${
@@ -144,30 +233,41 @@ const Dashboard = () => {
                 </p>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-2 mt-4">
-                {/* Add Task Button */}
-                <button
+              {/* Action Icons */}
+              <div className="flex gap-4 mt-4 border-t border-gray-100 pt-4">
+                {/* Add Task Icon */}
+                <FaPlus
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedProject(project.id);
                     setShowTaskModal(true);
                   }}
-                  className="w-full bg-indigo-600 text-white py-2 rounded-md shadow-md hover:bg-indigo-500 transition"
-                >
-                  {isAddingTask && selectedProject === project.id ? "Adding..." : "Add Task"}
-                </button>
+                  className="text-indigo-600 cursor-pointer hover:text-indigo-500 transition text-xl"
+                />
 
-                {/* Delete Button */}
-                <button
+                {/* Edit Icon */}
+                <FaEdit
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditProject({
+                      id: project.id,
+                      name: project.name,
+                      description: project.description || "",
+                      startDate: project.startDate?.toISOString().split("T")[0] || "",
+                      endDate: project.endDate?.toISOString().split("T")[0] || "",
+                    });
+                  }}
+                  className="text-yellow-500 cursor-pointer hover:text-yellow-400 transition text-xl"
+                />
+
+                {/* Delete Icon */}
+                <FaTrash
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteConfirmation(project.id, project.name);
                   }}
-                  className="w-full bg-red-600 text-white py-2 rounded-md shadow-md hover:bg-red-500 transition"
-                >
-                  {loadingProjectId === project.id ? "Deleting..." : "Delete"}
-                </button>
+                  className="text-red-600 cursor-pointer hover:text-red-500 transition text-xl"
+                />
               </div>
             </motion.div>
           ))}
@@ -180,7 +280,6 @@ const Dashboard = () => {
           projectId={selectedProject}
           onClose={() => setShowTaskModal(false)}
           refetchTasks={refetch}
-       
         />
       )}
 
@@ -193,13 +292,13 @@ const Dashboard = () => {
             </h2>
             <div className="flex justify-end gap-4">
               <button
-                className="px-4 py-2 bg-gray-300 rounded-md"
+                className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 transition"
                 onClick={() => setDeleteConfirmation(null)}
               >
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-red-600 text-white rounded-md"
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
                 onClick={handleDeleteProject}
               >
                 {loadingProjectId === deleteConfirmation.projectId ? "Deleting..." : "Delete"}

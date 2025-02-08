@@ -17,7 +17,7 @@ export default function Profile() {
 
   if (isLoading) return <p className="text-center text-gray-500">Loading...</p>;
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: any) => {
     try {
       setIsSubmitting(true);
       const updatedData = {
@@ -27,14 +27,14 @@ export default function Profile() {
       await updateProfile.mutateAsync(updatedData);
       toast.success("Profile updated!");
       await update();
-    } catch (error) {
+    } catch (error:any) {
       toast.error(error.message || "Failed to update profile");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const onPasswordChange = async (data) => {
+  const onPasswordChange = async (data:any) => {
     if (data.newPassword !== data.confirmPassword) {
       toast.error("Passwords do not match");
       return;
@@ -44,7 +44,7 @@ export default function Profile() {
       await changePassword.mutateAsync({ oldPassword: data.oldPassword, newPassword: data.newPassword });
       toast.success("Password changed!");
       reset();
-    } catch (error) {
+    } catch (error:any) {
       toast.error(error.message || "Failed to change password");
     } finally {
       setIsSubmitting(false);
