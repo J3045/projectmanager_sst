@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-1.1.x"]
+}
+
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  name            String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  image           String?
+  hashedPassword  String?
+  preferences     Json? 
+  accounts        Account[]
+  sessions        Session[]
+  authoredTasks   Task[]    @relation("TaskAuthor")
+  assignedTasks   Task[]    @relation("TaskAssignee") // Many-to-many relationship
+  teams           Team[]
+
+  @@index([email]) // Index for frequently queried field
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Team {
+  id                   Int    @id @default(autoincrement())
+  teamName             String
+  productOwnerUserId   String?
+  projectManagerUserId String?
+  users                User[]
+  projects             ProjectTeam[]
+
+  @@index([teamName]) // Index for frequently queried field
+}
+
+model Project {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
+  tasks       Task[]
+  teams       ProjectTeam[]
+
+  @@index([name]) // Index for frequently queried field
+}
+
+model ProjectTeam {
+  id        Int     @id @default(autoincrement())
+  teamId    Int
+  projectId Int
+  team      Team    @relation(fields: [teamId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+}
+
+enum TaskStatus {
+  TO_DO
+  IN_PROGRESS
+  IN_REVIEW
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Task {
+  id             Int          @id @default(autoincrement())
+  title          String
+  description    String?
+  status         TaskStatus?  
+  priority       TaskPriority?
+  tags           String?
+  startDate      DateTime?
+  dueDate        DateTime?
+  points         Int?
+  projectId      Int
+  authorUserId   String
+  assignedUsers  User[]       @relation("TaskAssignee") // Many-to-many relationship
+  createdAt      DateTime     @default(now()) // Track creation time
+  updatedAt      DateTime     @updatedAt // Track last update time
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author    User     @relation("TaskAuthor", fields: [authorUserId], references: [id])
+
+  @@index([projectId, status, priority]) // Indexes for frequently queried fields
+}
