@@ -3,13 +3,24 @@ import { api } from "~/utils/api";
 import { motion } from "framer-motion";
 import { toast } from "react-hot-toast";
 
-const AddProjectForm = ({ onClose, refetch }: { onClose: () => void; refetch: () => void }) => {
+interface AddProjectFormProps {
+  onClose: () => void;
+  refetch: () => void;
+  setIsAddingProject: React.Dispatch<React.SetStateAction<boolean>>; // Add this
+}
+
+const AddProjectForm: React.FC<AddProjectFormProps> = ({ onClose, refetch, setIsAddingProject }) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createProject = api.project.createProject.useMutation({
+    onMutate: () => {
+      setIsSubmitting(true);
+      setIsAddingProject(true); // Ensure state is updated
+    },
     onSuccess: () => {
       toast.success("🎉 Project created successfully!", {
         style: {
@@ -22,6 +33,7 @@ const AddProjectForm = ({ onClose, refetch }: { onClose: () => void; refetch: ()
       });
       refetch();
       onClose();
+      setIsAddingProject(false); // Reset state
     },
     onError: (error) => {
       toast.error("❌ Failed to create project!", {
@@ -34,11 +46,19 @@ const AddProjectForm = ({ onClose, refetch }: { onClose: () => void; refetch: ()
         },
       });
       console.error("Error creating project", error);
+      setIsAddingProject(false); // Reset state on error
     },
+    onSettled: () => setIsSubmitting(false),
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!name.trim()) return toast.error("Project name is required.");
+    if (!description.trim()) return toast.error("Project description is required.");
+    if (!startDate || !endDate) return toast.error("Please select both start and end dates.");
+    if (new Date(startDate) > new Date(endDate)) return toast.error("End date must be after start date.");
+
     createProject.mutate({ name, description, startDate, endDate });
   };
 
@@ -56,6 +76,7 @@ const AddProjectForm = ({ onClose, refetch }: { onClose: () => void; refetch: ()
           <button
             onClick={onClose}
             className="text-gray-600 hover:text-gray-900 transition transform hover:scale-110 text-3xl leading-none"
+            aria-label="Close form"
           >
             &times;
           </button>
@@ -70,6 +91,7 @@ const AddProjectForm = ({ onClose, refetch }: { onClose: () => void; refetch: ()
               onChange={(e) => setName(e.target.value)}
               required
               className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              aria-label="Project Name"
             />
           </div>
 
@@ -78,7 +100,9 @@ const AddProjectForm = ({ onClose, refetch }: { onClose: () => void; refetch: ()
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              required
               className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              aria-label="Project Description"
             />
           </div>
 
@@ -89,7 +113,9 @@ const AddProjectForm = ({ onClose, refetch }: { onClose: () => void; refetch: ()
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                required
                 className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                aria-label="Start Date"
               />
             </div>
             <div>
@@ -98,16 +124,23 @@ const AddProjectForm = ({ onClose, refetch }: { onClose: () => void; refetch: ()
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                required
                 className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                aria-label="End Date"
               />
             </div>
           </div>
 
           <button
             type="submit"
-            className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-500 transition transform hover:scale-105"
+            disabled={isSubmitting}
+            className={`w-full py-3 text-white font-semibold rounded-lg shadow-md transition transform ${
+              isSubmitting
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-indigo-600 hover:bg-indigo-500 hover:scale-105"
+            }`}
           >
-            Create Project
+            {isSubmitting ? "Creating..." : "Create Project"}
           </button>
         </form>
       </motion.div>

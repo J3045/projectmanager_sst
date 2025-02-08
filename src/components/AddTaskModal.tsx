@@ -4,6 +4,7 @@ import { api } from "~/utils/api"; // Corrected import for API from utils
 import { TaskStatus, TaskPriority } from "@prisma/client"; // Import enums
 import Select from "react-select"; // Import react-select
 import { MultiValue } from "react-select"
+import { toast } from "react-hot-toast";
 
 interface AddTaskModalProps {
   projectId: number;
@@ -22,6 +23,8 @@ const AddTaskModal = ({ projectId, onClose, refetchTasks }: AddTaskModalProps) =
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [points, setPoints] = useState<number | undefined>(undefined);
   const [users, setUsers] = useState<{ id: string; name: string | null }[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   // Fetch users from the database
   const { data: userData } = api.user.getAllUsers.useQuery();
@@ -55,8 +58,8 @@ const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: st
     },
     onError: (err) => {
       console.error("Error creating task:", err);
-      alert(`Error creating task: ${err.message}`);
-    },
+      toast.error(`Error creating task: ${err.message}`);
+    }
   });
 
   // Status dot color based on the status value
@@ -93,6 +96,15 @@ const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: st
 
   const handleSubmit = () => {
     try {
+      if (!title.trim()) {
+        toast.error("Task title is required!");
+        return;
+      }
+      if (!status) {
+        toast.error("Please select a task status.");
+        return;
+      }
+      setIsSubmitting(true);
       mutate({
         title,
         description,
@@ -156,7 +168,7 @@ const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: st
               <select
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 value={status ?? ""}
-                onChange={(e) => setStatus(e.target.value as TaskStatus)}
+                onChange={(e) => setStatus(e.target.value as TaskStatus | null)}
               >
                 <option value="">Select Status</option>
                 <option value={TaskStatus.TO_DO}>To Do</option>
@@ -191,7 +203,7 @@ const handleUserChange = (selectedOptions: MultiValue<{ value: string; label: st
               <select
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 value={priority ?? ""}
-                onChange={(e) => setPriority(e.target.value as TaskPriority)}
+                onChange={(e) => setPriority(e.target.value as TaskPriority | null)}
               >
                 <option value="">Select Priority</option>
                 <option value={TaskPriority.LOW}>Low</option>

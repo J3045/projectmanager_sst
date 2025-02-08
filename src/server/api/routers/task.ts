@@ -56,38 +56,42 @@ export const taskRouter = createTRPCRouter({
 
   // Update an existing task
   updateTask: protectedProcedure
-    .input(
-      z.object({
-        id: z.number(), // Update the field name to `id` instead of `taskId`
-        title: z.string().optional(),
-        description: z.string().optional(),
-        assignedUserIds: z.array(z.string()).optional(), // Array of user IDs
-        dueDate: z.date().nullable(),
-        status: z.nativeEnum(TaskStatus).optional(), // Use enum type
-        priority: z.nativeEnum(TaskPriority).optional(), // Use enum type
-        tags: z.string().optional(),
-        startDate: z.date().nullable(),
-        points: z.number().optional(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      return await ctx.db.task.update({
-        where: { id: input.id }, // Use `id` as the identifier
-        data: {
-          title: input.title,
-          description: input.description,
-          status: input.status,
-          priority: input.priority,
-          tags: input.tags,
-          startDate: input.startDate,
-          dueDate: input.dueDate,
-          points: input.points,
-          assignedUsers: {
-            set: input.assignedUserIds?.map((userId) => ({ id: userId })), // Update assigned users
-          },
+  .input(
+    z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      description: z.string().optional(),
+      assignedUserIds: z.array(z.string()).optional(),
+      dueDate: z.date().nullable(),
+      status: z.nativeEnum(TaskStatus).optional(),
+      priority: z.nativeEnum(TaskPriority).optional(),
+      tags: z.string().optional(),
+      startDate: z.date().nullable(),
+      points: z.number().optional(),
+    })
+  )
+  .mutation(async ({ input, ctx }) => {
+    const existingTask = await ctx.db.task.findUnique({ where: { id: input.id } });
+    if (!existingTask) throw new Error("Task not found");
+
+    return await ctx.db.task.update({
+      where: { id: input.id },
+      data: {
+        title: input.title,
+        description: input.description,
+        status: input.status,
+        priority: input.priority,
+        tags: input.tags,
+        startDate: input.startDate,
+        dueDate: input.dueDate,
+        points: input.points,
+        assignedUsers: {
+          set: input.assignedUserIds?.map((userId) => ({ id: userId })),
         },
-      });
-    }),
+      },
+    });
+  }),
+
 
   // Update task status
   updateTaskStatus: protectedProcedure

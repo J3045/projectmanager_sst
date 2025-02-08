@@ -23,7 +23,6 @@ const Sidebar = () => {
   const menuItems = [
     { name: "Dashboard", icon: <FaHome />, href: "/dashboard" },
     { name: "Projects", icon: <FaTh />, href: "/projects" },
-    { name: "Tasks", icon: <FaUsers />, href: "/tasks" },
     { name: "profile", icon: <FaCog />, href: "/profile" },
   ];
 

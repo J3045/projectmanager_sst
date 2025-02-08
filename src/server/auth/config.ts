@@ -66,11 +66,14 @@ export const authConfig = {
         token.email = user.email;
         token.name = user.name;
         token.picture = user.image;
-      }
+        token.exp = Math.floor(Date.now() / 1000) + 60 * 60 * 1; // Expires in 24 hours
+    }
+      
       return token;
     },
   
     async session({ session, token }) {
+      
       const userId = token.id as string; // Ensure it's a string
   
       if (!userId) return session;

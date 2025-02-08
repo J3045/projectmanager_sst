@@ -10,6 +10,8 @@ import AddTaskModal from "~/components/AddTaskModal";
 import { api } from "~/utils/api";
 import { type Task, TaskStatus } from "@prisma/client";
 
+
+
 const Dashboard = () => {
   const { data: session } = useSession();
   const router = useRouter();
@@ -178,7 +180,7 @@ const Dashboard = () => {
           projectId={selectedProject}
           onClose={() => setShowTaskModal(false)}
           refetchTasks={refetch}
-          setIsAddingTask={setIsAddingTask}
+       
         />
       )}
 
