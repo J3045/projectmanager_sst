@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -9,7 +9,7 @@ import AddProjectForm from "~/components/AddProjectForm";
 import AddTaskModal from "~/components/AddTaskModal";
 import { api } from "~/utils/api";
 import { type Task, TaskStatus } from "@prisma/client";
-import { FaTrash, FaEdit, FaPlus, FaCalendarAlt, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaTrash, FaEdit, FaPlus, FaCalendarAlt, FaChevronDown, FaChevronUp, FaFilter } from "react-icons/fa";
 
 const Dashboard = () => {
   const { data: session } = useSession();
@@ -33,9 +33,29 @@ const Dashboard = () => {
     endDate: string;
   } | null>(null);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<number, boolean>>({});
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterCriteria, setFilterCriteria] = useState<{
+    taskCount?: "asc" | "desc";
+    status?: "No Tasks" | "In Progress" | "Completed";
+    dueDate?: "asc" | "desc";
+  }>({});
+
+  const filterRef = useRef<HTMLDivElement>(null); // Ref for the filter modal
 
   // Fetch projects using tRPC
   const { data: projects, isError, refetch } = api.project.getAllProjects.useQuery();
+
+  // Close filter modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Delete project mutation
   const deleteProject = api.project.deleteProject.useMutation({
@@ -105,6 +125,45 @@ const Dashboard = () => {
     }));
   };
 
+  // Filter projects based on criteria
+  const filteredProjects = projects?.filter((project) => {
+    const status = getProjectStatus(project.tasks);
+
+    // Filter by status
+    if (filterCriteria.status && status !== filterCriteria.status) {
+      return false;
+    }
+
+    return true;
+  });
+
+  // Sort projects by task count and due date
+  const sortedProjects = filteredProjects?.sort((a, b) => {
+    // Sort by task count
+    if (filterCriteria.taskCount) {
+      const taskCountA = a.tasks.length;
+      const taskCountB = b.tasks.length;
+      if (filterCriteria.taskCount === "asc") {
+        return taskCountA - taskCountB;
+      } else {
+        return taskCountB - taskCountA;
+      }
+    }
+
+    // Sort by due date
+    if (filterCriteria.dueDate) {
+      const dateA = a.endDate ? new Date(a.endDate).getTime() : Infinity;
+      const dateB = b.endDate ? new Date(b.endDate).getTime() : Infinity;
+      if (filterCriteria.dueDate === "asc") {
+        return dateA - dateB;
+      } else {
+        return dateB - dateA;
+      }
+    }
+
+    return 0;
+  });
+
   if (isError) {
     return (
       <div className="text-center text-red-500 font-semibold">
@@ -131,9 +190,9 @@ const Dashboard = () => {
           </div>
         </motion.div>
 
-        {/* Create Project Button */}
+        {/* Create Project and Filter Buttons */}
         <motion.div
-          className="mb-8 flex justify-start"
+          className="mb-8 flex justify-between items-center"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
@@ -144,6 +203,73 @@ const Dashboard = () => {
           >
             {isAddingProject ? "Adding..." : "+ Create New Project"}
           </button>
+
+          {/* Filter Button */}
+          <div className="relative" ref={filterRef}>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="px-6 py-3 bg-gray-600 text-white rounded-lg shadow-md hover:bg-gray-500 transition transform hover:scale-105 flex items-center gap-2"
+            >
+              <FaFilter /> Filter
+            </button>
+
+            {/* Filter Dropdown */}
+            {showFilters && (
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg p-4 z-10">
+                <div className="mb-4">
+                  <label className="block text-gray-700 font-medium mb-2">Task Count</label>
+                  <select
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) =>
+                      setFilterCriteria((prev) => ({
+                        ...prev,
+                        taskCount: e.target.value as "asc" | "desc",
+                      }))
+                    }
+                  >
+                    <option value="">Select Order</option>
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                  </select>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-gray-700 font-medium mb-2">Status</label>
+                  <select
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) =>
+                      setFilterCriteria((prev) => ({
+                        ...prev,
+                        status: e.target.value as "No Tasks" | "In Progress" | "Completed",
+                      }))
+                    }
+                  >
+                    <option value="">Select Status</option>
+                    <option value="No Tasks">No Tasks</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 font-medium mb-2">Due Date</label>
+                  <select
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) =>
+                      setFilterCriteria((prev) => ({
+                        ...prev,
+                        dueDate: e.target.value as "asc" | "desc",
+                      }))
+                    }
+                  >
+                    <option value="">Select Order</option>
+                    <option value="asc">Ascending</option>
+                    <option value="desc">Descending</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
         </motion.div>
 
         {/* Add Project Modal */}
@@ -171,7 +297,7 @@ const Dashboard = () => {
 
         {/* Project Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects?.map((project, index) => (
+          {sortedProjects?.map((project, index) => (
             <motion.div
               key={project.id}
               className="bg-white shadow-lg rounded-xl p-6 hover:shadow-2xl transition duration-300 border border-gray-100 flex flex-col justify-between"
