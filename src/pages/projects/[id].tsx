@@ -47,6 +47,7 @@ const ProjectPage = () => {
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
+  // Fetch project and tasks only if `id` is available
   const projectQuery = api.project.getProjectById.useQuery(
     { id: Number(id) },
     { enabled: !!id }
@@ -123,8 +124,9 @@ const ProjectPage = () => {
     setShowAddTaskModal(true);
   };
 
-  if (projectQuery.isLoading || tasksQuery.isLoading) {
-    return <div className="text-center text-lg font-semibold">Loading...</div>;
+  // Show loading state until `id` is available
+  if (!id) {
+    return null; // Or return a loading spinner
   }
 
   if (error) {

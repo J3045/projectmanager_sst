@@ -117,6 +117,16 @@ const AddProjectForm: React.FC<AddProjectFormProps> = ({
     }
   };
 
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedStartDate = e.target.value;
+    setStartDate(selectedStartDate);
+
+    // Reset end date if it's earlier than the new start date
+    if (endDate && new Date(selectedStartDate) > new Date(endDate)) {
+      setEndDate("");
+    }
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
       <motion.div
@@ -169,7 +179,7 @@ const AddProjectForm: React.FC<AddProjectFormProps> = ({
               <input
                 type="date"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={handleStartDateChange}
                 required
                 className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 aria-label="Start Date"
@@ -182,7 +192,9 @@ const AddProjectForm: React.FC<AddProjectFormProps> = ({
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 required
-                className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                min={startDate} // Ensure end date cannot be earlier than start date
+                disabled={!startDate} // Disable until start date is selected
+                className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 aria-label="End Date"
               />
             </div>

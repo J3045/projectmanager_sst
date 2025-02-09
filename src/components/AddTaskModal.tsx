@@ -119,6 +119,10 @@ const AddTaskModal = ({ projectId, onClose, refetchTasks, taskData }: AddTaskMod
         toast.error("Please select a task status.");
         return;
       }
+      if (startDate && dueDate && new Date(startDate) > new Date(dueDate)) {
+        toast.error("Due date must be after start date.");
+        return;
+      }
       setIsSubmitting(true);
 
       const taskDataInput = {
@@ -145,6 +149,16 @@ const AddTaskModal = ({ projectId, onClose, refetchTasks, taskData }: AddTaskMod
       console.error("Error submitting task:", error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedStartDate = new Date(e.target.value);
+    setStartDate(selectedStartDate);
+
+    // Reset due date if it's earlier than the new start date
+    if (dueDate && selectedStartDate > dueDate) {
+      setDueDate(null);
     }
   };
 
@@ -204,19 +218,7 @@ const AddTaskModal = ({ projectId, onClose, refetchTasks, taskData }: AddTaskMod
               <option value={TaskStatus.COMPLETED}>Completed</option>
             </select>
           </div>
-
-          {/* Due Date */}
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium">Due Date</label>
-            <input
-              type="date"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              value={dueDate?.toISOString().split("T")[0] ?? ""}
-              onChange={(e) => setDueDate(new Date(e.target.value))}
-            />
-          </div>
-
-          {/* Priority (Dropdown) */}
+           {/* Priority (Dropdown) */}
           <div className="mb-4">
             <label className="block text-gray-700 font-medium">Priority</label>
             <select
@@ -231,8 +233,35 @@ const AddTaskModal = ({ projectId, onClose, refetchTasks, taskData }: AddTaskMod
               <option value={TaskPriority.URGENT}>Urgent</option>
             </select>
           </div>
+          
+          
 
-          {/* Points (Dropdown) */}
+          
+
+          {/* Start Date */}
+          <div className="mb-4">
+            <label className="block text-gray-700 font-medium">Start Date</label>
+            <input
+              type="date"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              value={startDate?.toISOString().split("T")[0] ?? ""}
+              onChange={handleStartDateChange}
+            />
+          </div>
+
+          {/* Due Date */}
+          <div className="mb-4">
+            <label className="block text-gray-700 font-medium">Due Date</label>
+            <input
+              type="date"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              value={dueDate?.toISOString().split("T")[0] ?? ""}
+              onChange={(e) => setDueDate(new Date(e.target.value))}
+              min={startDate?.toISOString().split("T")[0]} // Ensure due date cannot be earlier than start date
+              disabled={!startDate} // Disable until start date is selected
+            />
+          </div>
+           {/* Points (Dropdown) */}
           <div className="mb-4">
             <label className="block text-gray-700 font-medium">Points</label>
             <select
@@ -247,17 +276,6 @@ const AddTaskModal = ({ projectId, onClose, refetchTasks, taskData }: AddTaskMod
               <option value={20}>20</option>
               <option value={25}>25</option>
             </select>
-          </div>
-
-          {/* Start Date */}
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium">Start Date</label>
-            <input
-              type="date"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              value={startDate?.toISOString().split("T")[0] ?? ""}
-              onChange={(e) => setStartDate(new Date(e.target.value))}
-            />
           </div>
 
           {/* Tags */}

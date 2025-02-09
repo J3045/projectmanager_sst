@@ -35,7 +35,7 @@ const Dashboard = () => {
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<number, boolean>>({});
 
   // Fetch projects using tRPC
-  const { data: projects, isError, refetch, isLoading } = api.project.getAllProjects.useQuery();
+  const { data: projects, isError, refetch } = api.project.getAllProjects.useQuery();
 
   // Delete project mutation
   const deleteProject = api.project.deleteProject.useMutation({
@@ -169,118 +169,109 @@ const Dashboard = () => {
           />
         )}
 
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-          </div>
-        )}
-
         {/* Project Grid */}
-        {!isLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects?.map((project, index) => (
-              <motion.div
-                key={project.id}
-                className="bg-white shadow-lg rounded-xl p-6 hover:shadow-2xl transition duration-300 border border-gray-100 flex flex-col justify-between"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-              >
-                {/* Project Title and Description */}
-                <div onClick={() => router.push(`/projects/${project.id}`)} className="cursor-pointer">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">{project.name}</h3>
-                  <div className="text-gray-600 text-sm">
-                    <p className={expandedDescriptions[project.id] ? "" : "line-clamp-2"}>
-                      {project.description || "No description available"}
-                    </p>
-                    {project.description && project.description.length > 100 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleDescription(project.id);
-                        }}
-                        className="text-indigo-600 hover:text-indigo-500 mt-1 flex items-center text-sm"
-                      >
-                        {expandedDescriptions[project.id] ? (
-                          <>
-                            <FaChevronUp className="mr-1" /> Show Less
-                          </>
-                        ) : (
-                          <>
-                            <FaChevronDown className="mr-1" /> Show More
-                          </>
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Project Dates */}
-                <div className="mt-4 flex items-center text-gray-700 text-sm">
-                  <FaCalendarAlt className="mr-2 text-gray-500" />
-                  <span>
-                    {project.startDate?.toISOString().split("T")[0]} -{" "}
-                    {project.endDate?.toISOString().split("T")[0]}
-                  </span>
-                </div>
-
-                {/* Task & Status */}
-                <div className="mt-4 flex justify-between items-center">
-                  <div className="text-gray-700 text-sm">
-                    <span className="font-semibold">Tasks:</span> {project.tasks.length}
-                  </div>
-                  <p
-                    className={`text-sm font-semibold ${
-                      getProjectStatus(project.tasks) === "Completed"
-                        ? "text-green-500"
-                        : "text-yellow-500"
-                    }`}
-                  >
-                    {getProjectStatus(project.tasks)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {projects?.map((project, index) => (
+            <motion.div
+              key={project.id}
+              className="bg-white shadow-lg rounded-xl p-6 hover:shadow-2xl transition duration-300 border border-gray-100 flex flex-col justify-between"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+            >
+              {/* Project Title and Description */}
+              <div onClick={() => router.push(`/projects/${project.id}`)} className="cursor-pointer">
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">{project.name}</h3>
+                <div className="text-gray-600 text-sm">
+                  <p className={expandedDescriptions[project.id] ? "" : "line-clamp-2"}>
+                    {project.description || "No description available"}
                   </p>
+                  {project.description && project.description.length > 100 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDescription(project.id);
+                      }}
+                      className="text-indigo-600 hover:text-indigo-500 mt-1 flex items-center text-sm"
+                    >
+                      {expandedDescriptions[project.id] ? (
+                        <>
+                          <FaChevronUp className="mr-1" /> Show Less
+                        </>
+                      ) : (
+                        <>
+                          <FaChevronDown className="mr-1" /> Show More
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
+              </div>
 
-                {/* Action Icons */}
-                <div className="flex gap-4 mt-4 border-t border-gray-100 pt-4">
-                  {/* Add Task Icon */}
-                  <FaPlus
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedProject(project.id);
-                      setShowTaskModal(true);
-                    }}
-                    className="text-indigo-600 cursor-pointer hover:text-indigo-500 transition text-xl"
-                  />
+              {/* Project Dates */}
+              <div className="mt-4 flex items-center text-gray-700 text-sm">
+                <FaCalendarAlt className="mr-2 text-gray-500" />
+                <span>
+                  {project.startDate?.toISOString().split("T")[0]} -{" "}
+                  {project.endDate?.toISOString().split("T")[0]}
+                </span>
+              </div>
 
-                  {/* Edit Icon */}
-                  <FaEdit
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditProject({
-                        id: project.id,
-                        name: project.name,
-                        description: project.description || "",
-                        startDate: project.startDate?.toISOString().split("T")[0] || "",
-                        endDate: project.endDate?.toISOString().split("T")[0] || "",
-                      });
-                    }}
-                    className="text-yellow-500 cursor-pointer hover:text-yellow-400 transition text-xl"
-                  />
-
-                  {/* Delete Icon */}
-                  <FaTrash
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteConfirmation(project.id, project.name);
-                    }}
-                    className="text-red-600 cursor-pointer hover:text-red-500 transition text-xl"
-                  />
+              {/* Task & Status */}
+              <div className="mt-4 flex justify-between items-center">
+                <div className="text-gray-700 text-sm">
+                  <span className="font-semibold">Tasks:</span> {project.tasks.length}
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
+                <p
+                  className={`text-sm font-semibold ${
+                    getProjectStatus(project.tasks) === "Completed"
+                      ? "text-green-500"
+                      : "text-yellow-500"
+                  }`}
+                >
+                  {getProjectStatus(project.tasks)}
+                </p>
+              </div>
+
+              {/* Action Icons */}
+              <div className="flex gap-4 mt-4 border-t border-gray-100 pt-4">
+                {/* Add Task Icon */}
+                <FaPlus
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedProject(project.id);
+                    setShowTaskModal(true);
+                  }}
+                  className="text-indigo-600 cursor-pointer hover:text-indigo-500 transition text-xl"
+                />
+
+                {/* Edit Icon */}
+                <FaEdit
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditProject({
+                      id: project.id,
+                      name: project.name,
+                      description: project.description || "",
+                      startDate: project.startDate?.toISOString().split("T")[0] || "",
+                      endDate: project.endDate?.toISOString().split("T")[0] || "",
+                    });
+                  }}
+                  className="text-yellow-500 cursor-pointer hover:text-yellow-400 transition text-xl"
+                />
+
+                {/* Delete Icon */}
+                <FaTrash
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteConfirmation(project.id, project.name);
+                  }}
+                  className="text-red-600 cursor-pointer hover:text-red-500 transition text-xl"
+                />
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
 
       {/* Task Modal */}

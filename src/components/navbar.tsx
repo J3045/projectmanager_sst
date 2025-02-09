@@ -10,7 +10,7 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Force session update when navbar loads
+  // Force session update when navbar loads
   useEffect(() => {
     update();
   }, []);
@@ -33,8 +33,7 @@ const Navbar = () => {
   const pageTitles: Record<string, string> = {
     "/dashboard": "Dashboard",
     "/projects": "Projects",
-    "/teams": "Teams",
-    "/settings": "Settings",
+    "/profile": "Profile",
   };
 
   const isProjectPage = router.pathname.startsWith("/projects/");
@@ -45,7 +44,7 @@ const Navbar = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="flex justify-between items-center bg-gradient-to-r from-purple-700 via-purple-800 to-purple-900 text-white border-b-2 border-purple-600 p-4 shadow-lg relative"
+      className="flex justify-between items-center bg-indigo-700 text-white border-b-2 border-indigo-600 p-4 shadow-lg relative"
     >
       <h1 className="text-2xl font-semibold text-white drop-shadow-lg">{currentPage}</h1>
 
@@ -64,7 +63,7 @@ const Navbar = () => {
               />
             ) : (
               <div
-                className="w-10 h-10 bg-purple-500 text-white font-bold rounded-full flex items-center justify-center cursor-pointer border-2 border-white shadow-lg"
+                className="w-10 h-10 bg-indigo-500 text-white font-bold rounded-full flex items-center justify-center cursor-pointer border-2 border-white shadow-lg"
                 onClick={toggleDropdown}
               >
                 {session.user.name?.[0] || "U"}
