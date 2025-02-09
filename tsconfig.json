@@ -30,7 +30,7 @@
     },
 
     /* ✅ Add SST Types */
-    "types": ["@types/node", "sst"]
+    "types": ["@types/node", "sst", "vitest"]
   },
   "include": [
     ".eslintrc.cjs",
