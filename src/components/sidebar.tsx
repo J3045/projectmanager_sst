@@ -48,27 +48,18 @@ const Sidebar = () => {
       animate={{ width: expanded ? 250 : 80 }}
       className="h-screen bg-gray-800 text-white p-4 flex flex-col shadow-lg relative transition-all"
     >
-      {/* User Profile Section */}
-      {session && session.user && (
-        <div className="flex items-center gap-3 mb-6">
-          {session.user.image ? (
-            <Image
-              src={session.user.image}
-              alt="User Profile"
-              width={40}
-              height={40}
-              className="rounded-full border-2 border-gray-300 shadow-md"
-            />
-          ) : (
-            <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-medium">
-                {session.user.name ? session.user.name[0] : "U"}
-              </span>
-            </div>
-          )}
-          {expanded && <span className="text-lg font-medium">{session.user.name}</span>}
-        </div>
-      )}
+      {/* Logo Section */}
+      <div className="flex items-center gap-3 mb-6">
+        {/* Display logo from the public folder */}
+        <Image
+          src="/logo.png" // Logo image from public folder
+          alt="Logo"
+          width={40}
+          height={40}
+          className="rounded-full border-2 border-gray-300 shadow-md"
+        />
+        {expanded && <span className="text-lg font-medium">Project Manager</span>} {/* Display App Name */}
+      </div>
 
       {/* Navigation Links */}
       <nav className="flex-1 space-y-4">

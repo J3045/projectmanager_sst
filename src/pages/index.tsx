@@ -9,7 +9,7 @@ export default function Home() {
       <Head>
         <title>ManagePro - Streamline Your Workflow</title>
         <meta name="description" content="The ultimate project management tool for teams." />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/logo.png" />
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-r from-[#6a11cb] to-[#2575fc] text-white">
         <div className="container flex flex-col items-center text-center px-6 py-20">
