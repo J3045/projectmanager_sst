@@ -46,7 +46,8 @@ const ProjectPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Track loading state
+  const [isLoading, setIsLoading] = useState(true); // Track initial loading state
+  const [globalLoading, setGlobalLoading] = useState(false); // Track global loading state
 
   // Fetch project and tasks only if `id` is available
   const projectQuery = api.project.getProjectById.useQuery(
@@ -106,6 +107,7 @@ const ProjectPage = () => {
 
   const handleStatusChange = async (taskId: number, newStatus: TaskStatus) => {
     try {
+      setGlobalLoading(true); // Start global loader
       setTasks((prevTasks) =>
         prevTasks.map((task) => (task.id === taskId ? { ...task, status: newStatus } : task))
       );
@@ -113,16 +115,21 @@ const ProjectPage = () => {
     } catch (error) {
       console.error("Error updating task status:", error);
       setError("Failed to update task status.");
+    } finally {
+      setGlobalLoading(false); // Stop global loader
     }
   };
 
   const handleDeleteTask = async (taskId: number) => {
     try {
+      setGlobalLoading(true); // Start global loader
       await deleteTaskMutation.mutateAsync({ id: taskId });
       setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
     } catch (error) {
       console.error("Error deleting task:", error);
       setError("Failed to delete task.");
+    } finally {
+      setGlobalLoading(false); // Stop global loader
     }
   };
 
@@ -170,6 +177,34 @@ const ProjectPage = () => {
 
   return (
     <Layout>
+      {/* Global Loader */}
+      {globalLoading && (
+        <div className="fixed inset-0 z-50 bg-gray-800 bg-opacity-70 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <svg
+              className="animate-spin h-8 w-8 text-blue-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto p-6">
         {/* Project Header */}
         <motion.div
