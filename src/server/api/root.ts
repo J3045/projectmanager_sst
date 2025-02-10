@@ -1,6 +1,5 @@
 
 import { taskRouter } from "../api/routers/task";
-import { teamRouter } from "../api/routers/team";
 import { projectRouter } from "../api/routers/project";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { authRouter } from "../api/routers/auth";
@@ -15,7 +14,6 @@ import { userRouter } from "../api/routers/userRouter";
 export const appRouter = createTRPCRouter({
   auth: authRouter,
   task: taskRouter,
-  team: teamRouter,
   project: projectRouter,
   user: userRouter, // ✅ Use only `userRouter`
 });
