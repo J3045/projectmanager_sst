@@ -46,17 +46,28 @@ const ProjectPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Track loading state
 
   // Fetch project and tasks only if `id` is available
   const projectQuery = api.project.getProjectById.useQuery(
     { id: Number(id) },
-    { enabled: !!id }
+    { enabled: !!id, retry: false } // Disable retries to avoid unnecessary delays
   );
 
-  const tasksQuery = api.task.getTasksByProject.useQuery(Number(id), { enabled: !!id });
+  const tasksQuery = api.task.getTasksByProject.useQuery(Number(id), {
+    enabled: !!id,
+    retry: false, // Disable retries to avoid unnecessary delays
+  });
 
   const updateTaskStatusMutation = api.task.updateTaskStatus.useMutation();
   const deleteTaskMutation = api.task.deleteTask.useMutation();
+
+  useEffect(() => {
+    // Set loading to false once `id` is available and data is fetched
+    if (id && !projectQuery.isLoading && !tasksQuery.isLoading) {
+      setIsLoading(false);
+    }
+  }, [id, projectQuery.isLoading, tasksQuery.isLoading]);
 
   useEffect(() => {
     if (tasksQuery.data) {
@@ -124,17 +135,37 @@ const ProjectPage = () => {
     setShowAddTaskModal(true);
   };
 
-  // Show loading state until `id` is available
-  if (!id) {
-    return null; // Or return a loading spinner
+  // Show loading state until `id` and data are available
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-screen">
+          <div className="text-gray-600">Loading...</div>
+        </div>
+      </Layout>
+    );
   }
 
+  // Handle errors
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-screen">
+          <div className="text-red-500">{error}</div>
+        </div>
+      </Layout>
+    );
   }
 
+  // Handle case where project is not found
   if (!projectQuery.data) {
-    return <div className="text-gray-600">Project not found</div>;
+    return (
+      <Layout>
+        <div className="flex justify-center items-center h-screen">
+          <div className="text-gray-600">Project not found</div>
+        </div>
+      </Layout>
+    );
   }
 
   return (
