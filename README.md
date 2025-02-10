@@ -1,126 +1,201 @@
-# Project Management App
+# 📌 Project Management App
 
-## Overview
-This project is a **Task Management and Collaboration Tool** built using the **T3 Stack**. It provides an intuitive interface for task creation, assignment, and tracking, alongside user profile management and project settings.
+## 🔍 Overview
 
-## Tech Stack
-- **Frontend:** Next.js (T3 Stack), TypeScript, Tailwind CSS
-- **Backend:** Serverless API using **SST (Serverless Stack)**, tRPC
-- **Database:** Supabase (PostgreSQL)
-- **Authentication:** NextAuth.js
-- **ORM:** Prisma
-- **State Management:** React Hooks & tRPC
-- **Deployment:** AWS using SST & Vercel (Temporary Deployment)
+This project is a **📝 Task Management & 🤝 Collaboration Tool** built using the **T3 Stack**. It provides an intuitive interface for 📌 project creation, ✅ task assignment, and 📊 tracking, alongside user 👤 profile management.
 
-## Features
-### 1. Task Management
-- Create, assign, and track tasks
-- Set deadlines, priorities, and tags
-- Add detailed task descriptions
-- Assign tasks to team members
+## 🛠️ Tech Stack
 
-### 2. User Profiles & Project Settings
-- Users can manage personal profiles
-- Project managers can configure project settings
+- **💻 Frontend:** Next.js (T3 Stack), TypeScript, 🎨 Tailwind CSS
+- **🖥️ Backend:** Serverless API using **SST (Serverless Stack)**, tRPC
+- **🗄️ Database:** Supabase (PostgreSQL)
+- **🔐 Authentication:** 🌀 Discord OAuth via NextAuth.js
+- **📦 ORM:** Prisma
+- **📌 State Management:** React Hooks & tRPC
+- **🚀 Deployment:** AWS using SST & Vercel (Temporary Deployment)
 
-### 3. Dashboard (Optional)
-- Overview of tasks, deadlines, and progress
-- Project timelines and analytics
+## 🎯 Features
 
-### 4. Authentication
-- Email & Password login using **Supabase Auth**
-- OAuth with providers via NextAuth.js
+### 1️⃣ 📝 Task Management
 
-## Installation
-### Prerequisites
+- 📌 Create, 🎯 assign, and 📊 track tasks
+- ⏳ Set deadlines, 🔝 priorities, and 🏷️ tags
+- 🗒️ Add detailed task descriptions
+- 👥 Assign tasks to users
+- 🔄 Track task status and updates
+
+### 2️⃣ 👤 User Profiles
+
+- Users can manage personal 🆔 profiles
+
+### 3️⃣ 🔄 Dynamic Project Management
+
+- 📁 Projects are created dynamically and appear in the 📜 sidebar automatically
+- 📜 Sidebar updates dynamically to reflect newly added projects
+- 🔍 Users can open individual 📁 projects from the sidebar and 📊 dashboard
+- 📝 Within each project page:
+  - ➕ Users can add, 🛠️ update, and 🔄 change task statuses
+  - 📌 Users can track the status of tasks efficiently
+
+### 4️⃣ 📊 Dashboard
+
+- 🏗️ Overview of Projects, ⏳ deadlines, and 📌 Status
+- 📈 Project timelines and 📉 analytics
+- 🔍 Filter
+- ➕ Can directly add projects and tasks from here and also 🛠️ update and ❌ delete them
+
+### 5️⃣ 🔐 Authentication
+
+- OAuth with 🌀 Discord via NextAuth.js
+
+## ⚙️ Installation
+
+### 📌 Prerequisites
+
 Ensure you have the following installed:
-- Node.js (>= 18.x)
-- PostgreSQL (via Supabase)
-- AWS CLI (for SST deployment)
 
-### Clone the repository
+- 🟢 Node.js (>= 18.x)
+- 🗄️ PostgreSQL (via Supabase)
+- ☁️ AWS CLI (for SST deployment)
+
+### 🛠️ Clone the repository
+
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/ProjectManagementApp.git
+git clone -b master https://github.com/J3045/projectmanagementapp2.0.git
 cd ProjectManagementApp
 ```
 
-### Install Dependencies
+### 📦 Install Dependencies
+
 ```bash
-npm install
+npm install -f
 ```
 
-### Set Up Environment Variables
-Create a `.env` file and add the necessary credentials.
+### 🗄️ Set Up Environment Variables
+
+Create a `.env` file and add the necessary 🔑 credentials.
+
 ```env
-NEXTAUTH_SECRET=your_secret
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_anon_key
-AWS_REGION=your_aws_region
+DATABASE_URL="your_database_url"
+DIRECT_URL="your_direct_url"
+NEXTAUTH_URL=http://localhost:3000
+AUTH_SECRET="your_auth_secret"
+AUTH_DISCORD_ID="your_discord_id"
+AUTH_DISCORD_SECRET="your_discord_secret"
 ```
 
-### Run the Application
+### 🚀 Run the Application
+
 ```bash
 npm run dev
 ```
 
-## Deployment
-### Deploying with SST (Future Implementation)
+## 🌍 Deployment
+
+### ☁️ Deploying with SST (Future Implementation)
+
 ```bash
 npx sst deploy
 ```
 
-### Temporary Deployment (Vercel)
-Due to ongoing work on SST integration, the project is currently deployed on Vercel.
+### 🔄 Temporary Deployment (Vercel)
 
-## Testing
-Unit tests are included for key functionalities using **Vitest**.
+Due to ongoing work on SST integration, the project is currently deployed on ☁️ Vercel.
+
+## 🛠️ Testing
+
+Unit tests are included for key functionalities using **🧪 Vitest**.
 Run tests using:
+
 ```bash
 npm run test
 ```
 
-## API Endpoints (tRPC)
-### Project Endpoints
-- `project.getAllProjects` - Fetch all projects
-- `project.createProject` - Create a new project
-- `project.updateProject` - Update an existing project
-- `project.deleteProject` - Delete a project
+## 🔗 API Endpoints (tRPC)
 
-### Task Endpoints
-- `task.createTask` - Create a new task
-- `task.getTasksByProject` - Fetch tasks for a project
-- `task.updateTask` - Update a task
-- `task.deleteTask` - Delete a task
+### 📁 Project Endpoints
 
-## Folder Structure
+- `project.getAllProjects` - 📥 Fetch all projects
+- `project.createProject` - ➕ Create a new project
+- `project.updateProject` - 🛠️ Update an existing project
+- `project.deleteProject` - ❌ Delete a project
+
+### 📝 Task Endpoints
+
+- `task.createTask` - ➕ Create a new task
+- `task.getTasksByProject` - 📥 Fetch tasks for a project
+- `task.updateTask` - 🛠️ Update a task
+- `task.deleteTask` - ❌ Delete a task
+
+## 📁 Folder Structure
+
 ```
 .
 ├── src
-│   ├── pages (Frontend pages)
-│   ├── components (Reusable UI components)
+│   ├── app
+│   │   ├── api
+│   │   │   ├── auth/[...nextAuth]/route.ts
+│   ├── components
+│   │   ├── 📌 AddProjectForm.tsx
+│   │   ├── 📝 AddTaskModal.tsx
+│   │   ├── 🔄 GlobalLoader.tsx
+│   │   ├── 🏗️ Layout.tsx
+│   │   ├── 📜 Navbar.tsx
+│   │   ├── 📂 Sidebar.tsx
+│   │   ├── 📤 FileUpload.tsx
+│   ├── pages
+│   │   ├── api
+│   │   │   ├── trpc/[trpc.ts]
+│   │   ├── auth
+│   │   │   ├── ❌ error.tsx
+│   │   │   ├── 🔑 signin.tsx
+│   │   │   ├── 🆕 signup.tsx
+│   │   ├── projects
+│   │   │   ├── [id].tsx
+│   │   ├── 🏠 _app.tsx
+│   │   ├── 📊 dashboard.tsx
+│   │   ├── 🏠 index.tsx
+│   │   ├── 👤 profile.tsx
 │   ├── server
-│   │   ├── api (Backend logic using tRPC)
-│   │   ├── db (Prisma ORM setup)
-│   ├── utils (Helper functions, hooks)
-│   ├── styles (Global styles)
-├── __tests__ (Unit tests)
-├── .env (Environment variables)
-├── package.json
-├── README.md
+│   │   ├── auth
+│   │   │   ├── 🔑 config.ts
+│   │   │   ├── 🔗 index.ts
+│   │   ├── api
+│   │   │   ├── routers
+│   │   │   │   ├── 🔑 auth.ts
+│   │   │   │   ├── 📁 project.ts
+│   │   │   │   ├── 📝 task.ts
+│   │   │   │   ├── 👥 userRouter.ts
+│   │   │   │   ├── 📤 fileUpload.ts
+│   │   │   ├── 🌐 root.ts
+│   │   │   ├── 🔄 trpc.ts
+│   │   ├── 🗄️ db.js
+│   ├── styles
+│   │   ├── 🎨 globals.css
+│   ├── utils
+│   │   ├── 🔗 api.ts
+│   ├── 🔧 env.js
+├── __tests__ (🧪 Unit tests)
+├── 🔑 .env (🔐 Environment variables)
+├── 📦 package.json
+├── 📖 README.md
 ```
 
-## Future Improvements
-- Advanced analytics on task completion trends
-- Real-time updates using WebSockets
-- Mobile-friendly UI enhancements
-- Role-based access control
-- Email verification during sign-up using **Supabase Magic Link**
-- Forgot password functionality
-- **Full Integration of SST** once development progresses
+## 🚀 Future Improvements
 
-## Contributors
-- **Your Name** - [GitHub Profile](https://github.com/YOUR_GITHUB_USERNAME)
+- ☁️ **Full Integration of SST** once development progresses
+- 🧪 **More test cases for better coverage**
+- 🔐 **Role-Based Access Control (RBAC) for permissions management**
+- 📊 Advanced analytics on 🏗️ task completion trends
+- 📱 Mobile-friendly UI enhancements
+- 📩 Email verification during sign-up using **Supabase Magic Link**
+- 🔑 Forgot password functionality
+- 🤖 AI-powered task suggestions
+- 📅 Calendar view for tasks & deadlines
+- 🔔 Customizable notifications
 
-## License
-This project is licensed under the MIT License.
+
+## 🤝 Contributors
+
+- **👨‍💻 JAINIK PATEL** - [🔗 GitHub](https://github.com/J3045)
 
