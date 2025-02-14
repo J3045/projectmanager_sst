@@ -5,12 +5,15 @@ import { db } from "~/server/db";
 export const projectRouter = createTRPCRouter({
   // Get all projects with associated tasks and teams
   getAllProjects: publicProcedure
-  .input(z.object({}).optional())
-  .query(async () => {
-    return await db.project.findMany({
-      include: { tasks: true, teams: true },
-    });
-  }),
+    .input(z.object({}).optional())
+    .query(async () => {
+      console.log("Fetching projects from DB...");
+      const projects = await db.project.findMany({
+        include: { tasks: true, teams: true },
+      });
+      console.log("Projects Fetched:", projects);
+      return projects;
+    }),
 
   // Get a specific project by ID, including tasks and teams
   getProjectById: publicProcedure
