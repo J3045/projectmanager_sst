@@ -33,13 +33,14 @@ export const api = createTRPCNext<AppRouter>({
             (opts.direction === "down" && opts.result instanceof Error),
         }),
         httpBatchLink({
-          /**
-           * Transformer used for data de-serialization from the server.
-           *
-           * @see https://trpc.io/docs/data-transformers
-           */
           transformer: superjson,
           url: `${getBaseUrl()}/api/trpc`,
+          async headers() {
+            const headers = new Headers(); // ✅ Ensure this is always a Headers instance
+            headers.append("Content-Type", "application/json");
+
+            return headers;
+          },
         }),
       ],
     };
