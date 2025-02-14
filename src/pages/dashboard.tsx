@@ -44,6 +44,7 @@ const Dashboard = () => {
 
   // Fetch projects using tRPC
   const { data: projects, isError, refetch } = api.project.getAllProjects.useQuery();
+  console.log("Query Input:", projects);
 
   // Close filter modal when clicking outside
   useEffect(() => {
