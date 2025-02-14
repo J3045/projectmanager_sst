@@ -36,9 +36,8 @@ export const api = createTRPCNext<AppRouter>({
           transformer: superjson,
           url: `${getBaseUrl()}/api/trpc`,
           async headers() {
-            const headers = new Headers(); // ✅ Ensure this is always a Headers instance
+            const headers = new Headers(); 
             headers.append("Content-Type", "application/json");
-
             return headers;
           },
         }),
