@@ -4,7 +4,9 @@ import { db } from "~/server/db";
 
 export const projectRouter = createTRPCRouter({
   // Get all projects with associated tasks and teams
-  getAllProjects: publicProcedure.query(async () => {
+  getAllProjects: publicProcedure
+  .input(z.object({}).optional())
+  .query(async () => {
     return await db.project.findMany({
       include: { tasks: true, teams: true },
     });
