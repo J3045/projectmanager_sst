@@ -43,8 +43,11 @@ const Dashboard = () => {
   const filterRef = useRef<HTMLDivElement>(null); // Ref for the filter modal
 
   // Fetch projects using tRPC
-  const { data: projects, isError, refetch } = api.project.getAllProjects.useQuery();
-  console.log("Query Input:", projects);
+  const { data: projects, isError, error, isLoading, refetch } = api.project.getAllProjects.useQuery(undefined, {
+    onSuccess: (data) => console.log("Fetched Projects:", data),
+    onError: (err) => console.error("Fetch Error:", err),
+  });
+  
 
   // Close filter modal when clicking outside
   useEffect(() => {
