@@ -66,26 +66,6 @@ jobs:
           AUTH_DISCORD_SECRET: ${{ secrets.AUTH_DISCORD_SECRET }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
 
-      # 🚀 NEW: Fetch API Gateway URL from AWS CloudFormation
-      - name: Get API Gateway URL
-        run: |
-          API_URL=$(aws cloudformation describe-stacks \
-            --stack-name your-sst-stack-name \
-            --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue" \
-            --output text)
-          echo "API Gateway URL: $API_URL"
-          echo "API_URL=$API_URL" >> $GITHUB_ENV
-        env:
-          AWS_REGION: 'ap-south-1'
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-      # 🚀 NEW: Test API Endpoint
-      - name: Test API Endpoint
-        run: |
-          echo "Calling API: $API_URL"
-          curl -X GET "$API_URL/api/trpc/project.getAllProjects?batch=1"
-      
       # 🚀 NEW: Invalidate CloudFront Cache
       - name: Invalidate CloudFront Cache
         run: |
