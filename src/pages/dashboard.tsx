@@ -187,7 +187,7 @@ const Dashboard = () => {
             <h1 className="text-4xl font-bold">
               Welcome back, <span className="text-indigo-400">{session?.user?.name || "User"}</span>!
             </h1>
-            <p className="mt-2 text-lg text-gray-300">Track your projects and tasks effortlessly</p>
+            <p className="mt-2 text-lg text-gray-300">Track your projects and taskss effortlessly</p>
           </div>
         </motion.div>
 
