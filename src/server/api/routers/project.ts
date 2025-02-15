@@ -10,7 +10,7 @@ export const projectRouter = createTRPCRouter({
       try {
         console.log("Fetching projects from DB...");
         const projects = await db.project.findMany({
-          // include: { tasks: true, teams: true },
+          include: { tasks: true, teams: true },
         });
         console.log("Projects Fetched:", projects);
         return projects;
