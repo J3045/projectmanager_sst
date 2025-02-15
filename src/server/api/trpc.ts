@@ -16,10 +16,6 @@ import { ZodError } from "zod";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
-import fetch from 'node-fetch';
-
-globalThis.fetch = fetch as unknown as typeof globalThis.fetch;
-
 /**
  * 1. CONTEXT
  *
