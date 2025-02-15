@@ -4,7 +4,7 @@ import { db } from "~/server/db";
 
 export const projectRouter = createTRPCRouter({
   // Get all projects with associated tasks and teams
-  getAllProjects: publicProcedure
+  getAllProjects: protectedProcedure
     .input(z.object({}).optional())
     .query(async () => {
       try {
