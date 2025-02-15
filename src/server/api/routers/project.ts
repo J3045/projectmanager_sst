@@ -1,10 +1,10 @@
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { z } from "zod";
 import { db } from "~/server/db";
 
 export const projectRouter = createTRPCRouter({
   // Get all projects with associated tasks and teams
-  getAllProjects: protectedProcedure
+  getAllProjects: publicProcedure
     .input(z.object({}).optional())
     .query(async () => {
       try {

@@ -27,25 +27,25 @@ export const api = createTRPCNext<AppRouter>({
        * @see https://trpc.io/docs/links
        */
       links: [
-        loggerLink({
-          enabled: (opts) =>
-            process.env.NODE_ENV === "development" ||
-            (opts.direction === "down" && opts.result instanceof Error),
-        }),
         httpBatchLink({
-          url: `${getBaseUrl()}/api/trpc`,
           transformer: superjson,
-          headers() {
-            const headers = {
+          url: `${getBaseUrl()}/api/trpc`,
+          async headers() {
+            const headers: Record<string, string> = {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.AUTH_SECRET ?? ""}`,
             };
-        
-            console.log("🟢 Headers being sent:", headers);
+      
+            // // Add authentication token if available (only in the browser)
+            // if (typeof window !== "undefined") {
+            //   const session = await getSession(); // Use NextAuth.js to get the session
+            //   if (session?.user?.token) {
+            //     headers["Authorization"] =`Bearer ${session.user.token}`;
+            //   }
+            // }
+      
             return headers;
           },
         }),
-        
       ],
     };
   },
