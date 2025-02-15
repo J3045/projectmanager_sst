@@ -168,7 +168,7 @@ const Dashboard = () => {
   if (isError) {
     return (
       <div className="text-center text-red-500 font-semibold">
-        Error fetching projects. Please try again later.
+        Error fetching projects. Please try again laterr.
       </div>
     );
   }
