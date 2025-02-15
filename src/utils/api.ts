@@ -11,6 +11,10 @@ import superjson from "superjson";
 
 import { type AppRouter } from "~/server/api/root";
 
+import fetch from 'node-fetch';
+
+globalThis.fetch = fetch as unknown as typeof globalThis.fetch;
+
 const getBaseUrl = () => {
   if (typeof window !== "undefined") return ""; // browser should use relative url
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // SSR should use vercel url
