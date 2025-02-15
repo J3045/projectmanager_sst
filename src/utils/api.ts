@@ -34,16 +34,15 @@ export const api = createTRPCNext<AppRouter>({
         }),
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
-          fetch: async (url, options) => {
-            // Ensure headers are properly formatted
-            const headers = new Headers(options?.headers as HeadersInit);
-
-            // Add required headers if missing
-            headers.set("Content-Type", "application/json");
-            headers.set("Accept", "application/json");
-
-            return fetch(url, { ...options, headers });
-          },
+          fetch: async (url, options) =>
+            fetch(url, {
+              ...options,
+              headers: {
+                ...(options?.headers instanceof Headers
+                  ? Object.fromEntries(options.headers.entries()) // Convert Headers to Object
+                  : options?.headers),
+              },
+            }),
           transformer: superjson,
         }),
       ],
