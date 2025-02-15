@@ -33,9 +33,19 @@ export const api = createTRPCNext<AppRouter>({
             (opts.direction === "down" && opts.result instanceof Error),
         }),
         httpBatchLink({
-          transformer: superjson,
           url: `${getBaseUrl()}/api/trpc`,
+          transformer: superjson,
+          headers() {
+            const headers = {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.AUTH_SECRET ?? ""}`,
+            };
+        
+            console.log("🟢 Headers being sent:", headers);
+            return headers;
+          },
         }),
+        
       ],
     };
   },
