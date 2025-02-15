@@ -21,19 +21,11 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'
+          node-version: '20.x'
 
       # Install project dependencies
       - name: Install dependencies
         run: npm install --force
-
-      # Debugging: Print environment variables (DO NOT log secrets in production)
-      - name: Debug Secrets
-        run: |
-          echo "Checking if environment variables are available..."
-          echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}"
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"
-          echo "AWS_REGION=${{ secrets.AWS_REGION }}"
 
       # Ensure .env file is created
       - name: Create .env file
@@ -45,9 +37,43 @@ jobs:
           echo "AUTH_DISCORD_SECRET=${{ secrets.AUTH_DISCORD_SECRET }}" >> .env
           echo "DIRECT_URL=${{ secrets.DIRECT_URL }}" >> .env
 
-      # Run TypeScript build (if needed)
-      - name: Run TypeScript build
-        run: npm run build --if-present
+      # Debug: Check available CloudFormation stacks
+      - name: Debug CloudFormation Stacks
+        run: |
+          echo "Listing all CloudFormation stacks..."
+          aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE --region ap-south-1
+
+      # Get SST stack name dynamically
+      - name: Get SST Stack Name
+        run: |
+          STACK_NAME=$(aws cloudformation list-stacks \
+            --stack-status-filter CREATE_COMPLETE \
+            --query "StackSummaries[?contains(StackName, 'sst')].StackName | [0]" \
+            --output text --region ap-south-1)
+          
+          if [[ -z "$STACK_NAME" || "$STACK_NAME" == "None" ]]; then
+            echo "Error: SST stack not found!"
+            exit 1
+          fi
+          
+          echo "Found SST Stack: $STACK_NAME"
+          echo "STACK_NAME=$STACK_NAME" >> $GITHUB_ENV
+
+      # Get API Gateway URL from CloudFormation
+      - name: Get API Gateway URL
+        run: |
+          API_URL=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue" \
+            --output text --region ap-south-1)
+          
+          if [[ -z "$API_URL" || "$API_URL" == "None" ]]; then
+            echo "Error: API Gateway URL not found!"
+            exit 1
+          fi
+          
+          echo "API Gateway URL: $API_URL"
+          echo "API_URL=$API_URL" >> $GITHUB_ENV
 
       # Deploy to AWS with SST
       - name: Deploy to AWS with SST
@@ -66,7 +92,7 @@ jobs:
           AUTH_DISCORD_SECRET: ${{ secrets.AUTH_DISCORD_SECRET }}
           DIRECT_URL: ${{ secrets.DIRECT_URL }}
 
-      # 🚀 NEW: Invalidate CloudFront Cache
+      # 🚀 Invalidate CloudFront Cache
       - name: Invalidate CloudFront Cache
         run: |
           echo "Invalidating CloudFront cache..."
