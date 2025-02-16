@@ -7,12 +7,12 @@ import { api } from "~/utils/api";
 
 import "~/styles/globals.css";
 
-const MyApp: AppType<{ session?: Session | null }> = ({
+const MyApp: AppType<{ session: Session | null }> = ({
   Component,
-  pageProps,
+  pageProps: { session, ...pageProps },
 }) => {
   return (
-    <SessionProvider session={pageProps.session}>
+    <SessionProvider session={session}>
       <div className={GeistSans.className}>
         {/* Add Toaster here to enable global toast notifications */}
         <Toaster position="top-right" />

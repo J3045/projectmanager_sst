@@ -1,4 +1,4 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaAdapter } from "@auth/prisma-adapter"; 
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import DiscordProvider from "next-auth/providers/discord";
@@ -17,19 +17,7 @@ declare module "next-auth" {
 export const authConfig = {
   adapter: PrismaAdapter(db),
   session: {
-    strategy: "jwt",
-    maxAge: 60 * 60, // 1 hour session expiry
-  },
-  cookies: {
-    sessionToken: {
-      name: "__Secure-next-auth.session-token",
-      options: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-      },
-    },
+    strategy: "jwt", // Store sessions in the database
   },
   providers: [
     DiscordProvider({
@@ -70,7 +58,7 @@ export const authConfig = {
       },
     }),
   ],
-
+  
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -78,16 +66,18 @@ export const authConfig = {
         token.email = user.email;
         token.name = user.name;
         token.picture = user.image;
-        token.exp = Math.floor(Date.now() / 1000) + 60 * 60 * 1; // Expires in 1 hour
-      }
+        token.exp = Math.floor(Date.now() / 1000) + 60 * 60 * 1; // Expires in 24 hours
+    }
+      
       return token;
     },
-
+  
     async session({ session, token }) {
-      const userId = token.id as string;
-
+      
+      const userId = token.id as string; // Ensure it's a string
+  
       if (!userId) return session;
-
+  
       const freshUser = await db.user.findUnique({
         where: { id: userId },
         select: {
@@ -95,24 +85,25 @@ export const authConfig = {
           name: true,
           email: true,
           image: true,
-          emailVerified: true,
+          emailVerified: true, // ✅ Add this line
         },
       });
-
+  
       if (freshUser) {
         session.user = {
-          ...freshUser,
-          email: freshUser.email ?? "",
+          ...freshUser, // ✅ Includes emailVerified
+          email: freshUser.email ?? "", // Ensure it's always a string
         };
       }
-
+  
       return session;
     },
   },
-
+  
+  
   pages: {
     signIn: "/auth/signin",
   },
   secret: process.env.AUTH_SECRET,
-  trustHost: true,
+  trustHost:true
 } satisfies NextAuthConfig;
