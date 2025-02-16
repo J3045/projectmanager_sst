@@ -69,7 +69,7 @@ export const authConfig = {
         token.exp = Math.floor(Date.now() / 1000) + 60 * 60; // 60 seconds = 1 minute
         // Expires in 24 hours
     }
-      
+        
       return token;
     },
   
