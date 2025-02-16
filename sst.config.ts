@@ -35,18 +35,5 @@ export default $config({
         },
       },
     });
-
-    return {
-      api: {
-        routes: {
-          "GET    /getAllProjects": "server/api/routers/project.getAllProjects",
-          "POST   /getProjectById": "server/api/routers/project.getProjectById",
-          "POST   /createProject": "server/api/routers/project.createProject",
-          "PUT    /updateProject": "server/api/routers/project.updateProject",
-          "POST   /assignTeamToProject": "server/api/routers/project.assignTeamToProject",
-          "DELETE /deleteProject": "server/api/routers/project.deleteProject",
-        },
-      },
-    };
   },
 });
