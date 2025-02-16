@@ -1,10 +1,10 @@
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
+import { createTRPCRouter, publicProcedure } from "../trpc";
 import { z } from "zod";
 import { db } from "~/server/db";
 
 export const projectRouter = createTRPCRouter({
   // Get all projects with associated tasks and teams
-  getAllProjects: protectedProcedure
+  getAllProjects: publicProcedure
     .input(z.object({}).optional())
     .query(async () => {
       try {
@@ -20,7 +20,7 @@ export const projectRouter = createTRPCRouter({
     }),
 
   // Get a specific project by ID, including tasks and teams
-  getProjectById: protectedProcedure
+  getProjectById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       return await db.project.findUnique({
@@ -30,7 +30,7 @@ export const projectRouter = createTRPCRouter({
     }),
 
   // Create a new project
-  createProject: protectedProcedure
+  createProject: publicProcedure
     .input(
       z.object({
         name: z.string(),
@@ -51,7 +51,7 @@ export const projectRouter = createTRPCRouter({
     }),
 
   // Update an existing project
-  updateProject: protectedProcedure
+  updateProject: publicProcedure
     .input(
       z.object({
         id: z.number(),
@@ -74,7 +74,7 @@ export const projectRouter = createTRPCRouter({
     }),
 
   // Assign a team to a project
-  assignTeamToProject: protectedProcedure
+  assignTeamToProject: publicProcedure
     .input(z.object({ projectId: z.number(), teamId: z.number() }))
     .mutation(async ({ input }) => {
       return await db.projectTeam.create({
@@ -86,7 +86,7 @@ export const projectRouter = createTRPCRouter({
     }),
 
   // Delete a project
-  deleteProject: protectedProcedure
+  deleteProject: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       return await db.project.delete({

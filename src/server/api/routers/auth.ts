@@ -1,11 +1,11 @@
 // /src/server/api/routers/auth.ts
-import { createTRPCRouter, publicProcedure, protectedProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { z } from "zod";
 import { hash } from "bcryptjs";
 import { db } from "~/server/db";
 
 export const authRouter = createTRPCRouter({
-  signup: publicProcedure
+  signup: protectedProcedure
     .input(
       z.object({
         name: z.string().min(1, "Name is required"), // Add name field
