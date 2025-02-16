@@ -11,8 +11,9 @@ export default $config({
     };
   },
   async run() {
-    new sst.aws.Nextjs( "site", {
+    new sst.aws.Nextjs("site", {
       path: ".", // Path of your Next.js app
+      runtime: "nodejs18.x", // Match your local and Vercel runtime
       environment: {
         NEXTAUTH_URL: process.env.NEXTAUTH_URL || "",
         DATABASE_URL: process.env.DATABASE_URL || "",
@@ -20,8 +21,18 @@ export default $config({
         AUTH_DISCORD_ID: process.env.AUTH_DISCORD_ID || "",
         AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET || "",
         DIRECT_URL: process.env.DIRECT_URL || "",
-      }
+      },
+      cdk: {
+        distribution: {
+          defaultBehavior: {
+            allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            cachedMethods: ["GET", "HEAD"],
+            forwardedValues: {
+              headers: ["*"], // Allow all headers
+            },
+          },
+        },
+      },
     });
   },
-  
 });
