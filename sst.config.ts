@@ -21,6 +21,10 @@ export default $config({
         AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET || "",
         DIRECT_URL: process.env.DIRECT_URL || "",
       },
+      lambda: {
+        timeout: 30, 
+        memorySize: 2048, 
+      },
       transform: {
         cdn: (args) => {
           args.defaultBehavior = {
